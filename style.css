@@ -1,0 +1,7 @@
+.todo:hover{
+  border: solid 0.4px rgb(187, 186, 186);
+}
+
+.pointer:hover{
+  cursor: pointer;
+}
