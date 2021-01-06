@@ -37,10 +37,8 @@ const Todo = ({todo}) => {
 
 const NoTodo = () => {
   return (
-    <div className="row">
-      <div className="col">
-        <h3 className="text-center my-2">You have no todos. Go get some rest!</h3>
-      </div>
+    <div className="col">
+      <h3 className="text-center my-2">You have no todos. Go get some rest!</h3>
     </div>
   )
 }
@@ -48,24 +46,21 @@ const NoTodo = () => {
 const InvalidBanner = ({info}) => <p className="todoError alert alert-danger text-center">{info}</p>;
 
 const AllTodos = ({todos}) => {
-  return (
-    <div className="row">
-      {todos.map((todo, index) => (<Todo key={index} todo={todo} />))}
-    </div>
-  );
+  if (todos.length === 0) return null;
+  return todos.map((todo, index) => (<Todo key={index} todo={todo} />));
 }
 
-const AddTodoContainer = ({isInvalidTodo, invalidTodoMessage, addTodo}) => {
+const AddTodoContainer = ({isInvalidTodo, invalidTodoMessage, addTodo, handleChangeTodo, todo}) => {
   return (
     <div className="container">
       <div className="row">
         <div className="col-md-8 col-lg-7 mx-auto">
-          <div className="form-group">
+          <form onSubmit={addTodo} className="form-group">
             {isInvalidTodo && <InvalidBanner info={invalidTodoMessage} />}
             <label htmlFor="do" className="lead">Write your todos here:</label>
-            <input id="do" className="form-control mb-3" type="text" placeholder="Write your todos here" />
-            <button onClick={addTodo} className="btn btn-primary btn-block my-2" type="button">Add!</button>
-          </div>
+            <input onChange={handleChangeTodo} value={todo} id="do" className="form-control mb-3" type="text" placeholder="Write your todos here" />
+            <button type="submit" className="btn btn-primary btn-block my-2">Add</button>
+          </form>
         </div>
       </div>
     </div>
@@ -76,48 +71,49 @@ class TodosContainer extends React.Component {
   constructor (props) {
     super(props);
     this.state = {
-      todos: [], 
+      todos: [],
+      todo: '',
       isInvalidTodo: false,
       invalidTodoMessage: ''
     };
   }
 
-  addTodo = () => {
-    const todos = this.state.todos;
-    const todo = document.querySelector('#do');
+  addTodo = event => {
+    event.preventDefault();
+    const {todos, todo} = this.state;
 
-    if (todos.includes(todo.value)) {
+    if (todos.includes(todo)) {
       this.setState({
         isInvalidTodo: true,
-        invalidTodoMessage: `${todo.value} is already in todos.`
+        invalidTodoMessage: `${todo} is already in todos.`
       });
     }
-    else if (todo.value === '') {
+    else if (todo === '') {
       this.setState({
         isInvalidTodo: true,
         invalidTodoMessage: 'Todo input should not be empty.'
       });
     }
     else {
-      todos.unshift(todo.value);
+      todos.unshift(todo);
       this.setState({
         isInvalidTodo: false, 
         invalidTodoMessage: '', 
-        todos: todos
+        todos: todos,
+        todo: ''
       });
-      todo.value = '';
     }
   }
 
-  clearTodos = () => {
-    this.setState({todos: []});
-  }
+  handleChangeTodo = event => this.setState({todo: event.target.value});
+
+  clearTodos = () => this.setState({todos: []});
 
   render () {
-    const {todos, isInvalidTodo, invalidTodoMessage} = this.state;
+    const {todos, todo, isInvalidTodo, invalidTodoMessage} = this.state;
     return (
       <section>
-        <AddTodoContainer isInvalidTodo={isInvalidTodo} invalidTodoMessage={invalidTodoMessage} addTodo={this.addTodo} />
+        <AddTodoContainer isInvalidTodo={isInvalidTodo} invalidTodoMessage={invalidTodoMessage} addTodo={this.addTodo} handleChangeTodo={this.handleChangeTodo} todo={todo} />
         <div className="container">
           <div className="row my-3">
             <div className="col-12 d-flex justify-content-between">
@@ -128,7 +124,11 @@ class TodosContainer extends React.Component {
             </div>
           </div>
           
-          {todos.length === 0 ? <NoTodo /> : <AllTodos todos={todos}/>}
+          <div className="row">
+            {todo && <Todo todo={todo} />}
+            {<AllTodos todos={todos}/>}
+            {todos.length === 0 && todo === '' && <NoTodo />}
+          </div>
         </div>
       </section>
     );
